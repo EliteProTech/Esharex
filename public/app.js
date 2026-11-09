@@ -1,15 +1,19 @@
-import { registerPlugin } from '@capacitor/core';
+import { Nodejs } from '@capawesome/capacitor-nodejs';
 
-const NodeJS = registerPlugin('NodeJS');
-
-async function startApp() {
-    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        try {
-            await NodeJS.start();
-        } catch (e) {
-            console.error('Failed to start local node server', e);
-        }
-    }
+let redirected = false;
+function openLocalApp() {
+  if (redirected || window.location.hostname === '127.0.0.1') return;
+  redirected = true;
+  window.location.replace('http://127.0.0.1:8080/');
 }
 
-startApp();
+async function waitForNodeServer() {
+  try {
+    await Nodejs.addListener('ready', openLocalApp);
+    const status = await Nodejs.isReady();
+    if (status.ready) openLocalApp();
+  } catch (error) {
+    console.error('eShareX embedded Node.js startup failed:', error);
+  }
+}
+waitForNodeServer();
