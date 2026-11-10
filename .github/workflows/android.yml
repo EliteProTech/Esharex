@@ -1,40 +1,113 @@
-name: Build eShareX Android APK
+name: Build eShareX APK
 
 on:
-  workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, master]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   build:
+    name: Build signed release APK
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - name: Install app dependencies
-        run: npm install
-      - name: Install embedded Node.js server dependencies
-        working-directory: public/nodejs
-        run: npm install --omit=dev
-      - name: Generate Android project
-        run: npx cap add android
-      - name: Sync Capacitor
-        run: npx cap sync android
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
-      - name: Build debug APK
-        working-directory: android
-        run: ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
+          java-version: '17'
+
+      - name: Configure Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          if [ ! -d "$SDK_ROOT" ]; then
+            echo "Android SDK directory not found: $SDK_ROOT"
+            exit 1
+          fi
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager 2>/dev/null | sort -V | tail -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager was not found under $SDK_ROOT/cmdline-tools"
+            exit 1
+          fi
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
+          "$SDKMANAGER" --sdk_root="$SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
+
+      - name: Validate release signing secrets
+        shell: bash
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in SIGNING_KEY_BASE64 SIGNING_STORE_PASSWORD SIGNING_KEY_ALIAS SIGNING_KEY_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              echo "Missing GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+
+          KEYSTORE="$RUNNER_TEMP/esharex-release.jks"
+          printf '%s' "$SIGNING_KEY_BASE64" | base64 --decode > "$KEYSTORE"
+          test -s "$KEYSTORE"
+
+          ACTUAL_SHA256="$(sha256sum "$KEYSTORE" | awk '{print $1}')"
+          EXPECTED_SHA256="ae3885e64e328016ff53283ed06a1876207f8ae6b02deff15bca203c9cfe33dc"
+          echo "Decoded keystore SHA-256: $ACTUAL_SHA256"
+          if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
+            echo "ERROR: SIGNING_KEY_BASE64 does not decode to the keystore you verified in Termux."
+            echo "Recreate the Base64 file from ~/esharex-release.jks and replace the GitHub SIGNING_KEY_BASE64 secret."
+            exit 1
+          fi
+
+          echo "Checking keystore password and alias..."
+          keytool -list -keystore "$KEYSTORE" -storepass "$SIGNING_STORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" >/dev/null
+          echo "Keystore password and alias are valid."
+
+          echo "Checking private-key password..."
+          keytool -certreq -keystore "$KEYSTORE" \
+            -storepass "$SIGNING_STORE_PASSWORD" \
+            -keypass "$SIGNING_KEY_PASSWORD" \
+            -alias "$SIGNING_KEY_ALIAS" \
+            -file "$RUNNER_TEMP/esharex-test.csr" -noprompt >/dev/null
+          echo "Private-key password is valid."
+
+          echo "EShareX_STORE_FILE=$KEYSTORE" >> "$GITHUB_ENV"
+          echo "EShareX_STORE_PASSWORD=$SIGNING_STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "EShareX_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "EShareX_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build signed release APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon clean assembleRelease
+
+      - name: Verify APK
+        run: test -s app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: eShareX-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: eShareX-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+          retention-days: 30
