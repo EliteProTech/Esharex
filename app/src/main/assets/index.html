@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#090b10"><meta name="description" content="Share files and chat with people on your local network.">
 <link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" href="/icon-192.png">
 <title>eShareX — Local sharing, together</title>
@@ -97,6 +97,67 @@
 .message-text{white-space:pre-wrap;overflow-wrap:anywhere}.edited-label{display:inline;font-size:10px;color:var(--muted);margin:0}.quoted-message{white-space:pre-wrap;overflow-wrap:anywhere}
 
 
+
+
+/* v2.4.0 getting started + nearby discovery */
+.nearby-panel{margin-top:14px;padding:14px;background:#0c1118;border:1px solid var(--line);border-radius:14px;text-align:left}
+.nearby-panel[hidden],.guide-content[hidden]{display:none}
+#nearbyStatus{font-size:12px;color:var(--muted);margin:8px 0}
+.nearby-device{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.nearby-device strong{display:block;font-size:13px}.nearby-device small{color:var(--muted);font-size:11px}
+.nearby-device button{margin-left:auto;padding:8px 12px;border:0;border-radius:10px;background:var(--accent);font-weight:800}
+.guide{padding:20px;margin:20px 0 10px;border-radius:20px}
+.guide-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.guide h2{margin:7px 0;font-size:22px}.guide-head p,.guide-step p{margin:4px 0 0;color:var(--muted);font-size:13px;line-height:1.55}
+.guide-step{display:flex;gap:13px;padding:15px 0;border-top:1px solid var(--line);align-items:flex-start}
+.guide-step>b{flex:0 0 30px;height:30px;border-radius:10px;background:var(--accent);color:#111;display:grid;place-items:center}
+.guide-step strong{font-size:14px}.guide-note{padding:12px;border-radius:12px;background:#b8f36b12;color:var(--accent);font-size:12px;line-height:1.5}
+
+/* Prevent accidental page zoom, text selection and tap highlights. Keep editing controls selectable. */
+html,body,.app,.topbar,.layout,.page,.panel,.hero,.hero-art,.brand,.nav,.nav a,.btn,.iconbtn,.menu,.footer,.chat-context,.bubble,.msg-meta,.person,.friend-card,.modalbox,.guide,.guide-step,.guide-note{
+ -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+}
+input,textarea,[contenteditable="true"],.ip-text, .selectable{
+ -webkit-user-select:text;user-select:text;-webkit-touch-callout:default;
+}
+button,a{ -webkit-tap-highlight-color:transparent; }
+
+
+/* 2.4.2: fixed conversation frame, keyboard-aware composer and scroll regions */
+html,body{height:100%;min-height:0}
+.app{min-height:100vh}
+body.conversation-mode{height:var(--app-height,100dvh);min-height:0;overflow:hidden}
+body.conversation-mode .app{height:var(--app-height,100dvh);min-height:0;overflow:hidden}
+body.conversation-mode .topbar{position:relative;top:auto;flex:0 0 68px}
+body.conversation-mode .layout{flex:1 1 auto;min-height:0;height:0;display:flex;flex-direction:column;overflow:hidden;padding-top:10px;padding-bottom:6px}
+body.conversation-mode .nav{flex:0 0 auto;margin:0 0 8px}
+body.conversation-mode .page.active{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;overflow:hidden}
+body.conversation-mode #chatPage{gap:0}
+body.conversation-mode .chat-context{flex:0 0 auto}
+body.conversation-mode .chat-shell{display:flex;flex:1 1 auto;min-height:0;overflow:hidden}
+body.conversation-mode .chat-panel{height:100%;min-height:0;flex:1 1 auto;display:flex;flex-direction:column;overflow:hidden}
+body.conversation-mode .messages{height:auto;min-height:0;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain}
+body.conversation-mode .composer{flex:0 0 auto;position:relative;z-index:3;padding:7px 9px max(6px,env(safe-area-inset-bottom));margin:0;background:#111720}
+body.conversation-mode .composer-row{flex:0 0 auto}
+body.conversation-mode #dmPanel{flex:1 1 auto;min-height:0;height:100%;overflow:hidden;flex-direction:column}
+body.conversation-mode #dmPanel[style*="display: block"]{display:flex!important}
+body.conversation-mode #dmPanel .messages{flex:1 1 auto;min-height:0}
+body.conversation-mode #friendsPage{overflow-y:auto;overscroll-behavior:contain}
+.filecard{gap:0}
+.filecard-name{display:block;overflow-wrap:anywhere;font-size:13px;line-height:1.4}
+.fileicon,.attachment-file-icon{display:none!important}
+@media(max-width:600px){
+ body.conversation-mode .topbar{flex-basis:62px;height:62px}
+ body.conversation-mode .layout{padding:8px 10px 4px}
+ body.conversation-mode .nav{margin-bottom:6px;padding:3px}
+ body.conversation-mode .nav a{padding:8px 5px}
+ body.conversation-mode .chat-context{padding:7px 2px 9px}
+ body.conversation-mode .chat-panel{border-radius:17px}
+ body.conversation-mode .messages{padding:10px 8px}
+ body.conversation-mode .composer{padding:6px 7px max(4px,env(safe-area-inset-bottom))}
+ body.conversation-mode .composer-field textarea{min-height:38px;max-height:96px;padding:8px 7px}
+}
+
 </style>
 </head>
 <body>
@@ -120,6 +181,15 @@
   <div class="hero-copy"><div class="eyebrow">Your local network, connected</div><h1>Share freely.<br><span style="color:var(--accent)">Stay connected.</span></h1><p>Chat, send files and connect with people on the same Wi-Fi network. No cloud account required to get started.</p><div class="home-stats"><div><strong id="memberCount">0</strong>Members</div><div><strong>Local</strong>Network-first</div><div><strong>Private</strong>By conversation</div></div></div>
   <div class="hero-card"><div class="hero-art"><svg viewBox="0 0 120 120" fill="none"><rect x="24" y="25" width="72" height="70" rx="19" stroke="#b8f36b" stroke-width="5"/><path d="M40 52h40M40 67h28" stroke="#b8f36b" stroke-width="5" stroke-linecap="round"/><circle cx="85" cy="82" r="15" fill="#b8f36b"/><path d="m79 82 4 4 8-9" stroke="#10150b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="field"><label>Your display name</label><input id="joinName" maxlength="32" placeholder="Choose a name"></div><div class="joinrow"><button class="btn" onclick="joinNetwork()">Join eShareX</button></div><div id="ipUnder" class="ip-under"></div><div id="homeConnection" class="home-connection"><div class="ip-label">LOCAL CONNECTION</div><div id="homeIp" class="home-ip">Finding local address…</div><button class="copy-ip" onclick="copyHomeIp()">Copy address</button></div><p style="font-size:11px;margin:12px 0 0;text-align:center">Everyone must be connected to the same local network.</p></div>
  </div>
+<section class="guide panel" id="howToUse">
+ <div class="guide-head"><div><div class="eyebrow">GETTING STARTED</div><h2>How to use eShareX</h2><p>Connect nearby devices and share on the same local network.</p></div><button class="btn secondary" id="guideToggle" onclick="toggleGuide()">Show</button></div>
+ <div class="guide-content" id="guideContent" hidden>
+  <div class="guide-step"><b>1</b><div><strong>Connect to the same network</strong><p>Use the same Wi-Fi router, or turn on a hotspot on one phone and connect the other phone to it.</p></div></div>
+  <div class="guide-step"><b>2</b><div><strong>Open eShareX on the hosting phone</strong><p>The first phone runs the local server. Keep eShareX open while others use the room.</p></div></div>
+  <div class="guide-step"><b>3</b><div><strong>Join from another device</strong><p>Android users can select a nearby eShareX device when discovery is available. Browser users can enter the host address or scan its QR code.</p></div></div>
+  <div class="guide-note">No mobile data or internet is required for local communication. Your router or hotspot must allow devices to communicate with each other.</div>
+ </div>
+</section>
 </section>
 <section class="page" id="chatPage">
  <div class="chat-context">
@@ -132,10 +202,10 @@
   <div class="composer">
    <input type="file" id="fileInput" hidden>
    <div class="reply-strip" id="generalReplyStrip" hidden><div class="reply-strip-copy"><strong id="generalReplyName"></strong><span id="generalReplyText"></span></div><button class="reply-cancel" onclick="cancelReply()" aria-label="Cancel reply">×</button></div>
-   <div class="composer-row"><div class="composer-field"><textarea id="generalInput" rows="1" placeholder="Type a message..." aria-label="Message"></textarea><button class="attach-inline" onclick="chooseAttachment()" title="Attach media" aria-label="Attach media">＋</button></div><button class="send" onclick="sendGeneral()" aria-label="Send message">➤</button></div>
+   <div class="composer-row"><div class="composer-field"><textarea id="generalInput" rows="1" inputmode="text" enterkeyhint="enter" autocapitalize="sentences" autocomplete="off" placeholder="Type a message..." aria-label="Message"></textarea><button class="attach-inline" onclick="chooseAttachment()" title="Attach media" aria-label="Attach media">＋</button></div><button class="send" onclick="sendGeneral()" aria-label="Send message">➤</button></div>
   </div>
  </div><aside class="panel sidepanel"><h3>People online</h3><div id="onlineList"></div></aside></div>
-<div id="dmPanel" class="panel chat-panel" style="display:none"><div class="chathead"><strong id="dmTitle">Private conversation</strong><button class="iconbtn" onclick="closeDM()">×</button></div><div class="messages" id="dmMessages"></div><div class="composer"><div class="reply-strip" id="dmReplyStrip" hidden><div class="reply-strip-copy"><strong id="dmReplyName"></strong><span id="dmReplyText"></span></div><button class="reply-cancel" onclick="cancelReply()" aria-label="Cancel reply">×</button></div><div class="composer-row"><div class="composer-field"><textarea id="dmInput" rows="1" placeholder="Type a message..." aria-label="Private message"></textarea><button class="attach-inline" onclick="chooseAttachment()" title="Attach media" aria-label="Attach media">＋</button></div><button class="send" onclick="sendDM()" aria-label="Send message">➤</button></div></div></div>
+<div id="dmPanel" class="panel chat-panel" style="display:none"><div class="chathead"><strong id="dmTitle">Private conversation</strong><button class="iconbtn" onclick="closeDM()">×</button></div><div class="messages" id="dmMessages"></div><div class="composer"><div class="reply-strip" id="dmReplyStrip" hidden><div class="reply-strip-copy"><strong id="dmReplyName"></strong><span id="dmReplyText"></span></div><button class="reply-cancel" onclick="cancelReply()" aria-label="Cancel reply">×</button></div><div class="composer-row"><div class="composer-field"><textarea id="dmInput" rows="1" inputmode="text" enterkeyhint="enter" autocapitalize="sentences" autocomplete="off" placeholder="Type a message..." aria-label="Private message"></textarea><button class="attach-inline" onclick="chooseAttachment()" title="Attach media" aria-label="Attach media">＋</button></div><button class="send" onclick="sendDM()" aria-label="Send message">➤</button></div></div></div>
 </section>
 <section class="page" id="friendsPage">
  <div class="chat-context"><span class="context-icon">♧</span><div class="context-title"><strong>Friends</strong><small id="friendsOnline">0 online</small></div><button class="iconbtn" onclick="toggleMenu()">⋮</button></div>
@@ -159,7 +229,7 @@ let currentPeer=null,seenGeneral=new Set(),seenDM=new Set(),poller=null,heartbea
 const isNative=/Android/i.test(navigator.userAgent)&&location.hostname==='127.0.0.1';
 if(myName)$('joinName').value=myName;
 if(!isNative)document.body.classList.add('web-mode');else document.body.classList.add('native-mode');
-function route(){let p=location.pathname;if(!['/','/chat','/friends'].includes(p))p='/';if(myName&&p==='/'){history.replaceState({},'','/chat');p='/chat'}if(!myName&&p!=='/'){history.replaceState({},'','/');p='/'}document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const ids={'/':'homePage','/chat':'chatPage','/friends':'friendsPage'};$(ids[p]).classList.add('active');document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.route===p));$('moreMenu').classList.remove('show');$('exportMenuItem').style.display=p==='/'?'none':'block';$('logoutMenuItem').style.display=p==='/'?'none':'block';document.querySelector('.nav').style.display=p==='/'?'none':'flex';document.querySelector('.footer').style.display=p==='/'?'block':'none';if(p==='/chat'&&myName){if(!currentPeer){$('dmPanel').style.display='none';document.querySelector('.chat-shell').style.display='block';$('conversationName').textContent='General chat'}loadGeneral();loadPeople()}if(p==='/friends'&&myName)loadPeople();}
+function route(){let p=location.pathname;if(!['/','/chat','/friends'].includes(p))p='/';if(myName&&p==='/'){history.replaceState({},'','/chat');p='/chat'}if(!myName&&p!=='/'){history.replaceState({},'','/');p='/'}document.body.classList.toggle('conversation-mode',p==='/chat'||p==='/friends');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const ids={'/':'homePage','/chat':'chatPage','/friends':'friendsPage'};$(ids[p]).classList.add('active');document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.route===p));$('moreMenu').classList.remove('show');$('exportMenuItem').style.display=p==='/'?'none':'block';$('logoutMenuItem').style.display=p==='/'?'none':'block';document.querySelector('.nav').style.display=p==='/'?'none':'flex';document.querySelector('.footer').style.display=p==='/'?'block':'none';if(p==='/chat'&&myName){if(!currentPeer){$('dmPanel').style.display='none';document.querySelector('.chat-shell').style.display='block';$('conversationName').textContent='General chat'}loadGeneral();loadPeople()}if(p==='/friends'&&myName)loadPeople();}
 function navigate(e,p){if(e)e.preventDefault();if(!myName&&p!=='/')return toast('Join eShareX first');history.pushState({},'',p);route()}function go(p){history.pushState({},'',p);route()}window.addEventListener('popstate',route);
 function toast(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2300)}
 async function api(url,opts={}){const r=await fetch(url,opts);if(!r.ok)throw new Error((await r.text())||r.statusText);return r.json()}
@@ -173,9 +243,10 @@ function renderMessage(m,container,mine){
  if(!mine){const n=document.createElement('div');n.className='msgname';n.textContent=m.username||m.fromName||'Member';b.appendChild(n)}
  if(m.replyTo){const q=document.createElement('div');q.className='quoted-message';q.textContent='↳ '+(m.replyTo.text||m.replyTo.filename||'Attachment');b.appendChild(q)}
  if(m.type==='file'){
+  b.classList.add('media-bubble');
   if((m.mime||'').startsWith('image/')){const im=document.createElement('img');im.src=m.url;im.alt=m.filename||'Shared image';im.onclick=()=>openMedia('img',m.url);b.appendChild(im)}
   else if((m.mime||'').startsWith('video/')){const v=document.createElement('video');v.src=m.url;v.controls=true;v.preload='metadata';b.appendChild(v)}
-  else{const link=document.createElement('a');link.className='filecard';link.href=m.url;link.target='_blank';link.download=m.filename||'';const icon=document.createElement('span');icon.className='fileicon';icon.textContent=fileIcon(m.mime,m.filename);const meta=document.createElement('span');meta.textContent=m.filename||'Download file';link.append(icon,meta);b.appendChild(link)}
+  else{const link=document.createElement('a');link.className='filecard';link.href=m.url;link.target='_blank';link.download=m.filename||'';const icon=document.createElement('span');icon.className='filecard-icon';icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';const meta=document.createElement('span');meta.className='filecard-name';meta.textContent=m.filename||'Download file';link.append(icon,meta);b.appendChild(link)}
   if(m.caption){const c=document.createElement('div');c.textContent=m.caption;b.appendChild(c)}
  }else{const t=document.createElement('div');t.className='message-text';t.textContent=m.text||'';b.appendChild(t)}
  row.appendChild(b);
@@ -184,11 +255,11 @@ function renderMessage(m,container,mine){
  const tm=document.createElement('div');tm.className='msgtime';tm.textContent=new Date(m.timestamp||Date.now()).toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true});meta.appendChild(tm);row.appendChild(meta);
  const actions=document.createElement('div');actions.className='msg-actions';
  const copy=document.createElement('button');copy.title='Copy';copy.textContent='▢';copy.onclick=()=>navigator.clipboard?.writeText(messagePreview(m)).then(()=>toast('Copied')).catch(()=>toast('Copy unavailable'));
- const reply=document.createElement('button');reply.title='Reply';reply.textContent='↩';reply.onclick=()=>setReplyTarget(m);
+ const reply=document.createElement('button');reply.title='Reply';reply.textContent='↩';reply.setAttribute('aria-label','Reply to this message');reply.onclick=(e)=>{e.preventDefault();e.stopPropagation();setReplyTarget(m)};
  actions.append(copy,reply);
  if(mine&&m.type!=='file'){const edit=document.createElement('button');edit.title='Edit';edit.textContent='✎';edit.onclick=()=>editMessage(m);actions.append(edit)}
  row.appendChild(actions);
- let touchX=0,touchY=0;row.addEventListener('touchstart',e=>{if(e.target.closest('button,a,input,textarea'))return;touchX=e.changedTouches[0].clientX;touchY=e.changedTouches[0].clientY},{passive:true});row.addEventListener('touchend',e=>{if(e.target.closest('button,a,input,textarea'))return;const dx=e.changedTouches[0].clientX-touchX,dy=e.changedTouches[0].clientY-touchY;if(dx>70&&dx>Math.abs(dy)*1.5)setReplyTarget(m)},{passive:true});
+ let touchX=0,touchY=0,touchStarted=false;row.addEventListener('touchstart',e=>{const t=e.changedTouches[0];if(e.target.closest('button,a,input,textarea')){touchStarted=false;return}touchX=t.clientX;touchY=t.clientY;touchStarted=true},{passive:true,capture:true});row.addEventListener('touchend',e=>{if(!touchStarted)return;touchStarted=false;const t=e.changedTouches[0],dx=t.clientX-touchX,dy=t.clientY-touchY;if(dx>75&&dx>Math.abs(dy)*1.35)setReplyTarget(m)},{passive:true,capture:true});
  container.appendChild(row);
 }
 function fileIcon(mime,name){if((mime||'').includes('pdf')||/\.pdf$/i.test(name||''))return '📄';if(/\.(zip|rar|7z)$/i.test(name||''))return '🗜';if((mime||'').startsWith('audio/'))return '🎵';return '📎'}
@@ -197,7 +268,21 @@ function cancelReply(){replyTarget=null;$('generalReplyStrip').hidden=true;$('dm
 function editMessage(m){editingMessage=m;$('editText').value=m.text||'';$('editModal').classList.add('show');setTimeout(()=>$('editText').focus(),100)}
 function closeEdit(){$('editModal').classList.remove('show');editingMessage=null}
 async function saveEdit(){if(!editingMessage)return;const updated=$('editText').value.trim();if(!updated)return toast('Message cannot be empty');const m=editingMessage;try{const isDM=!!m.from;await api(isDM?'/api/dm/edit':'/api/chat/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(isDM?{id:m.id,from:deviceId,text:updated}:{id:m.id,userId:deviceId,text:updated})});closeEdit();if(isDM){seenDM.clear();await loadDM(true)}else{seenGeneral.clear();await loadGeneral(true)}toast('Message updated')}catch(_){toast('Could not edit message')}}
-function updateMessageList(data,box,mineFn,seen){const firstRender=box.dataset.initialized!=='1';const distanceFromBottom=box.scrollHeight-box.clientHeight-box.scrollTop;const wasNearBottom=distanceFromBottom<90;if(!data.length){if(!box.children.length)box.innerHTML='<div class="empty">No messages yet. Start the conversation.</div>';box.dataset.initialized='1';return}const empty=box.querySelector('.empty');if(empty)empty.remove();data.forEach(m=>{const id=m.id||'';const existing=[...box.children].find(el=>el.dataset&&el.dataset.messageId===id);const signature=JSON.stringify(m);if(existing){if(existing.dataset.signature!==signature){const replacement=document.createElement('div');renderMessage(m,replacement,mineFn(m));existing.replaceWith(replacement.firstElementChild)}}else{renderMessage(m,box,mineFn(m));if(!seen.has(id))seen.add(id)}});box.dataset.initialized='1';if(firstRender||wasNearBottom)box.scrollTop=box.scrollHeight}
+function updateMessageList(data,box,mineFn,seen){
+ const firstRender=box.dataset.initialized!=='1';
+ const distanceFromBottom=box.scrollHeight-box.clientHeight-box.scrollTop;
+ const wasNearBottom=distanceFromBottom<28;
+ if(!data.length){if(!box.children.length)box.innerHTML='<div class="empty">No messages yet. Start the conversation.</div>';box.dataset.initialized='1';return}
+ const empty=box.querySelector('.empty');if(empty)empty.remove();
+ const oldTop=box.scrollTop,oldHeight=box.scrollHeight;
+ data.forEach(m=>{const id=m.id||'';const existing=[...box.children].find(el=>el.dataset&&el.dataset.messageId===id);const signature=JSON.stringify(m);if(existing){if(existing.dataset.signature!==signature){const replacement=document.createElement('div');renderMessage(m,replacement,mineFn(m));existing.replaceWith(replacement.firstElementChild)}}else{renderMessage(m,box,mineFn(m));if(!seen.has(id))seen.add(id)}});
+ box.dataset.initialized='1';
+ if(firstRender){box.scrollTop=box.scrollHeight;box.dataset.userReading='0'}
+ else if(wasNearBottom&&box.dataset.userReading!=='1'){box.scrollTop=box.scrollHeight}
+ else {const delta=box.scrollHeight-oldHeight;box.scrollTop=oldTop+Math.max(0,delta);box.dataset.userReading='1'}
+}
+// Keep polling from pulling the reader back to the newest message.
+['generalMessages','dmMessages'].forEach(id=>{const box=document.getElementById(id);if(!box)return;box.addEventListener('scroll',()=>{const gap=box.scrollHeight-box.clientHeight-box.scrollTop;if(gap>36)box.dataset.userReading='1';else box.dataset.userReading='0'},{passive:true})});
 async function loadGeneral(force=false){if(!myName)return;try{const data=await api('/api/messages');const box=$('generalMessages');const fresh=data.filter(m=>!seenGeneral.has(m.id));updateMessageList(data,box,m=>m.userId===deviceId||m.username===myName,seenGeneral);fresh.forEach(m=>{if(m.userId!==deviceId&&document.hidden){const title='eShareX · '+(m.username||'New message'),body=messagePreview(m);if(isNative&&window.AndroidBridge)window.AndroidBridge.showNotification(title,body);else if('Notification'in window&&Notification.permission==='granted')new Notification(title,{body})}})}catch(_){}}
 async function sendGeneral(){const text=$('generalInput').value.replace(/\r\n?/g,'\n').trim();if(!text)return;try{await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,userId:deviceId,username:myName,replyTo:replyTarget&&replyTarget._conversation==='general'?{text:messagePreview(replyTarget),messageId:replyTarget.id,username:replyTarget.username||replyTarget.fromName||''}:null})});$('generalInput').value='';$('generalInput').style.height='40px';cancelReply();await loadGeneral()}catch(_){toast('Message could not be sent')}}
 async function loadPeople(){if(!myName)return;try{let users=await api('/api/users?id='+encodeURIComponent(deviceId));let online=users.filter(u=>u.online);$('memberCount').textContent=users.length;$('chatOnline').textContent=online.length+' online';$('friendsOnline').textContent=online.length+' online';let others=users.filter(u=>u.id!==deviceId);$('onlineList').innerHTML='';$('friendsGrid').innerHTML='';if(!others.length)$('friendsGrid').innerHTML='<div class="panel empty">You are the first one here. Invite someone to join your network.</div>';others.forEach(u=>{let row=document.createElement('div');row.className='person';row.innerHTML='<div class="avatar"></div><div class="personinfo"><strong></strong><small></small></div><span class="dot"></span>';row.querySelector('.avatar').textContent=(u.name||'?').slice(0,1).toUpperCase();row.querySelector('strong').textContent=u.name;row.querySelector('small').textContent=u.online?'Online':'Offline';row.querySelector('.dot').classList.toggle('on',u.online);$('onlineList').appendChild(row);let card=document.createElement('div');card.className='panel friend-card';card.innerHTML='<div class="avatar"></div><div class="personinfo"><strong></strong><small></small></div><button class="btn">Message</button>';card.querySelector('.avatar').textContent=(u.name||'?').slice(0,1).toUpperCase();card.querySelector('strong').textContent=u.name;card.querySelector('small').textContent=u.online?'● Online':'○ Offline';card.querySelector('small').style.color=u.online?'var(--accent)':'var(--muted)';card.querySelector('button').onclick=()=>openDM(u);$('friendsGrid').appendChild(card)})}catch(_){}}
@@ -218,16 +303,71 @@ function openMedia(type,url){$('mediaContent').innerHTML='';let el=document.crea
 function chooseAttachment(){$('fileInput').click()}
 $('fileInput').addEventListener('change',e=>{const f=e.target.files[0];if(f)previewAttachment(f);e.target.value=''});
 function formatBytes(n){if(!n)return '0 B';const u=['B','KB','MB','GB'];let i=0,v=n;while(v>=1024&&i<u.length-1){v/=1024;i++}return v.toFixed(i?1:0)+' '+u[i]}
-function previewAttachment(f){pendingFile=f;const box=$('attachmentPreview');box.innerHTML='';if(f.type.startsWith('image/')){const img=document.createElement('img');img.src=URL.createObjectURL(f);img.alt=f.name;box.appendChild(img)}else if(f.type.startsWith('video/')){const video=document.createElement('video');video.src=URL.createObjectURL(f);video.controls=true;box.appendChild(video)}else{const wrap=document.createElement('div');wrap.className='attachment-file';const ico=document.createElement('span');ico.className='attachment-file-icon';ico.textContent=fileIcon(f.type,f.name);const meta=document.createElement('div');meta.className='attachment-file-meta';const name=document.createElement('strong');name.textContent=f.name;const size=document.createElement('small');size.textContent=(f.type||'Unknown file type')+' · '+formatBytes(f.size);meta.append(name,size);wrap.append(ico,meta);box.appendChild(wrap)}$('attachmentCaption').value='';$('attachmentModal').classList.add('show')}
+function previewAttachment(f){pendingFile=f;const box=$('attachmentPreview');box.innerHTML='';if(f.type.startsWith('image/')){const img=document.createElement('img');img.src=URL.createObjectURL(f);img.alt=f.name;box.appendChild(img)}else if(f.type.startsWith('video/')){const video=document.createElement('video');video.src=URL.createObjectURL(f);video.controls=true;box.appendChild(video)}else{const wrap=document.createElement('div');wrap.className='attachment-file';const meta=document.createElement('div');meta.className='attachment-file-meta';const name=document.createElement('strong');name.textContent=f.name;const size=document.createElement('small');size.textContent=(f.type||'Unknown file type')+' · '+formatBytes(f.size);meta.append(name,size);wrap.append(meta);box.appendChild(wrap)}$('attachmentCaption').value='';$('attachmentModal').classList.add('show')}
 function cancelAttachment(){if(pendingFile&&$('attachmentPreview').querySelector('img,video')){const el=$('attachmentPreview').querySelector('img,video');if(el.src.startsWith('blob:'))URL.revokeObjectURL(el.src)}pendingFile=null;$('attachmentModal').classList.remove('show')}
 async function sendAttachment(){if(!pendingFile)return;const f=pendingFile;const btn=$('sendAttachmentBtn');btn.disabled=true;btn.textContent='Sending…';const fd=new FormData();fd.append('file',f,f.name);fd.append('username',myName);fd.append('userId',deviceId);fd.append('caption',$('attachmentCaption').value.trim());fd.append('mimeType',f.type||'application/octet-stream');if(currentPeer){fd.append('from',deviceId);fd.append('to',currentPeer.id)}if(replyTarget&&replyTarget._conversation===(currentPeer?'dm:'+currentPeer.id:'general'))fd.append('replyTo',JSON.stringify({text:messagePreview(replyTarget),messageId:replyTarget.id,username:replyTarget.username||replyTarget.fromName||''}));try{const res=await fetch('/api/upload',{method:'POST',body:fd});if(!res.ok)throw new Error('Upload failed');cancelAttachment();cancelReply();if(currentPeer)await loadDM();else await loadGeneral();toast('Attachment sent')}catch(_){toast('Upload failed')}finally{btn.disabled=false;btn.textContent='Send attachment'}}
 $('generalInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey)e.stopPropagation()});$('dmInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey)e.stopPropagation()});$('generalInput').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px'});
 $('dmInput').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px'});
 document.addEventListener('click',e=>{if(!e.target.closest('.top-actions')&&!e.target.closest('.menu'))$('moreMenu').classList.remove('show')});
+
+['generalInput','dmInput'].forEach(id=>{const input=document.getElementById(id);if(!input)return;input.addEventListener('focus',()=>{const box=document.getElementById(id==='dmInput'?'dmMessages':'generalMessages');if(box){box.dataset.userReading='0';requestAnimationFrame(()=>{box.scrollTop=box.scrollHeight})}})});
+function updateAppViewportHeight(){
+ const h=window.visualViewport?window.visualViewport.height:window.innerHeight;
+ document.documentElement.style.setProperty('--app-height',Math.round(h)+'px');
+}
+updateAppViewportHeight();
+window.addEventListener('resize',updateAppViewportHeight,{passive:true});
+if(window.visualViewport){window.visualViewport.addEventListener('resize',updateAppViewportHeight,{passive:true});window.visualViewport.addEventListener('scroll',updateAppViewportHeight,{passive:true});}
+
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
-async function loadLandingConnection(){if(!isNative)return;try{const info=await api('/api/server-info');serverAddress=info.address;$('homeIp').textContent=info.address;$('homeQrImage').src='/api/qr?text='+encodeURIComponent(info.address);$('homeQrImage').onerror=()=>{$('homeQr').style.display='none'}}catch(_){$('homeIp').textContent='Local address unavailable'}}
+async function loadLandingConnection(){try{const info=await api('/api/server-info');serverAddress=info.address;if(info.available===false||!info.ip||info.ip==='127.0.0.1'){$('homeIp').textContent='Connect to Wi-Fi or turn on your hotspot';return}$('homeIp').textContent=info.address;if($('homeQrImage'))$('homeQrImage').src='/api/qr?text='+encodeURIComponent(info.address)}catch(_){$('homeIp').textContent='Waiting for local network…'}}
+function toggleGuide(){const c=$('guideContent'),b=$('guideToggle');c.hidden=!c.hidden;b.textContent=c.hidden?'Show':'Hide'}
+function renderNearbyDevices(items){const box=$('nearbyDevices'),status=$('nearbyStatus');box.innerHTML='';if(!items||!items.length){status.textContent='No other eShareX devices found yet. Make sure both devices are on the same Wi-Fi or hotspot.';return}status.textContent=items.length+' device(s) found';items.forEach(d=>{const row=document.createElement('div');row.className='nearby-device';const info=document.createElement('div');const name=document.createElement('strong');name.textContent=d.name||'eShareX device';const addr=document.createElement('small');addr.textContent=d.host+':'+d.port;info.append(name,addr);const btn=document.createElement('button');btn.textContent='Join';btn.onclick=()=>{if(window.AndroidBridge&&AndroidBridge.joinNearby)AndroidBridge.joinNearby('http://'+d.host+':'+d.port+'/')};row.append(info,btn);box.append(row)})}
+function startNearbyDiscovery(){if(!isNative||!window.AndroidBridge||!AndroidBridge.startDiscovery)return;$('nearbyPanel').hidden=false;AndroidBridge.startDiscovery()}
+window.onNearbyDevices=function(json){try{renderNearbyDevices(JSON.parse(json))}catch(_){}}
+
 function requestFirstOpenPermission(){if(!isNative)return;if(localStorage.getItem('esharex_notification_prompted')==='1')return;localStorage.setItem('esharex_notification_prompted','1');setTimeout(()=>requestNotificationPermission(),900)}
-if(myName){startPresence()}route();if(location.pathname==='/'&&!myName)loadLandingConnection();requestFirstOpenPermission()
+if(myName){startPresence()}route();if(location.pathname==='/'&&!myName){loadLandingConnection();startNearbyDiscovery();setInterval(loadLandingConnection,5000)}requestFirstOpenPermission()
 // Enter inserts a newline; the send button sends the message.
 </script>
 </body></html>
+<style>
+/* 2.4.3 media presentation and reply fixes */
+.filecard{display:flex;align-items:center;gap:9px;max-width:100%;padding:9px 10px;border-radius:10px;background:#0b1119;color:#f3f6fb!important;min-width:0}
+.filecard-icon{display:flex;flex:0 0 22px;align-items:center;justify-content:center;color:var(--accent)}
+.filecard-name{color:#f3f6fb!important;font-size:12px;line-height:1.35;min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.msgrow.mine .filecard{background:#0b1119;color:#f3f6fb!important;border-color:#ffffff20}
+.msgrow.mine .filecard-name{color:#f3f6fb!important}
+.bubble.media-bubble{width:fit-content;max-width:min(72%,340px);padding:6px;border-radius:14px}
+.bubble.media-bubble img,.bubble.media-bubble video{display:block;width:auto;max-width:min(100%,260px);max-height:260px;margin:0;border-radius:9px;object-fit:contain}
+.msgrow.mine .bubble.media-bubble{background:#17202b;border:1px solid #2a3544;color:var(--text);border-bottom-right-radius:5px}
+.bubble.media-bubble .filecard{width:100%}
+.bubble.media-bubble .filecard-name{font-weight:650}
+.msgrow .msg-actions button[aria-label="Reply to this message"]{min-width:30px;min-height:27px;touch-action:manipulation}
+body.conversation-mode .messages{padding-bottom:8px;scroll-padding-bottom:8px}
+@media(max-width:600px){
+ .bubble.media-bubble{max-width:min(68%,290px);padding:5px}
+ .bubble.media-bubble img,.bubble.media-bubble video{max-width:min(100%,230px);max-height:230px}
+ .filecard{padding:8px 9px;gap:8px}
+ body.conversation-mode .messages{padding-bottom:8px;scroll-padding-bottom:8px}
+}
+</style>
+<script>
+/* Keep the newest message visible when the mobile keyboard changes the viewport. */
+(function(){
+ let lastHeight=window.visualViewport?window.visualViewport.height:window.innerHeight;
+ function keepLatestVisible(){
+   const active=document.activeElement;
+   if(!active || !['generalInput','dmInput'].includes(active.id)) return;
+   const box=active.id==='dmInput'?document.getElementById('dmMessages'):document.getElementById('generalMessages');
+   if(box) requestAnimationFrame(()=>{box.scrollTop=box.scrollHeight;});
+ }
+ if(window.visualViewport){
+   window.visualViewport.addEventListener('resize',()=>{
+     const h=window.visualViewport.height;
+     if(h<lastHeight-40) keepLatestVisible();
+     lastHeight=h;
+   },{passive:true});
+ }
+})();
+</script>
